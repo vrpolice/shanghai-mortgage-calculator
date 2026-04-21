@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 上海房贷与税费计算器</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --background-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 25px;
+        }
+        @media (max-width: 800px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 25px;
+        }
+        h1 {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .input-row {
+            display: flex;
+            gap: 15px;
+        }
+        .input-row .form-group {
+            flex: 1;
+        }
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .result-section {
+            background-color: #f1f8ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            align-items: center;
+        }
+        .result-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--success-color);
+        }
+        .result-value.large {
+            font-size: 1.4rem;
+            color: var(--danger-color);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .note {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 6px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+        }
+        .tab.active {
+            color: var(--secondary-color);
+            border-bottom-color: var(--secondary-color);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>2026 上海房贷与税费计算器</h1>
+        
+        <!-- 左侧输入区域 -->
+        <div class="card">
+            <h2>购房信息</h2>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>房屋总价 (万元)</label>
+                    <input type="number" id="totalPrice" value="500" min="0" step="1">
+                </div>
+                <div class="form-group">
+                    <label>首付金额 (万元)</label>
+                    <input type="number" id="downPayment" value="75" min="0" step="1">
+                    <div class="note" id="downPaymentRatioText">比例: 15.00%</div>
+                </div>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>房屋面积 (平方米)</label>
+                    <input type="number" id="area" value="100" min="0" step="1">
+                </div>
+                <div class="form-group">
+                    <label>购房类型</label>
+                    <select id="homeType">
+                        <option value="first">首套房</option>
+                        <option value="second">二套房</option>
+                    </select>
+                </div>
+            </div>
+            
+            <h2>贷款信息</h2>
+            
+            <div class="form-group">
+                <label>贷款年限 (年)</label>
+                <select id="loanYears">
+                    <option value="30" selected>30年 (360期)</option>
+                    <option value="25">25年 (300期)</option>
+                    <option value="20">20年 (240期)</option>
+                    <option value="15">15年 (180期)</option>
+                    <option value="10">10年 (120期)</option>
+                    <option value="5">5年 (60期)</option>
+                </select>
+            </div>
+            
+            <div class="input-row">
+                <div class="form-group">
+                    <label>商贷金额 (万元)</label>
+                    <input type="number" id="commercialLoan" value="185" min="0" step="1">
+                </div>
+                <div class="form-group">
+                    <label>商贷利率 (%)</label>
+                    <input type="number" id="commercialRate" value="3.05" min="0" step="0.01">
+                </div>
+            </div>
+
+            <div class="input-row">
+                <div class="form-group">
+                    <label>公积金金额 (万元)</label>
+                    <input type="number" id="providentLoan" value="240" min="0" step="1">
+                </div>
+                <div class="form-group">
+                    <label>公积金利率 (%)</label>
+                    <input type="number" id="providentRate" value="2.60" min="0" step="0.01">
+                </div>
+            </div>
+
+            <button class="btn" onclick="calculate()">开始计算</button>
+            <div class="note" style="text-align: center; margin-top: 15px;">*政策依据：2026年上海最新购房政策（首付最低15%，契税1%/1.5%/2%等）</div>
+        </div>
+
+        <!-- 右侧结果区域 -->
+        <div class="card">
+            <h2>计算结果</h2>
+            
+            <!-- 交易与税费明细 -->
+            <div class="result-section">
+                <h3>首期与税费</h3>
+                <div class="result-item">
+                    <span>契税金额:</span>
+                    <span class="result-value" id="resDeedTax">0 元</span>
+                </div>
+                <div class="note" id="deedTaxNote" style="margin-top:-5px; margin-bottom:10px; text-align:right;"></div>
+                <div class="result-item" style="border-top: 1px dashed #ccc; padding-top: 10px;">
+                    <span>首付 + 契税 (需准备现金):</span>
+                    <span class="result-value large" id="resCashNeeded">0 元</span>
+                </div>
+            </div>
+
+            <!-- 房贷明细 -->
+            <div class="result-section">
+                <h3>房贷明细 (贷款总额: <span id="resTotalLoan">0</span> 万)</h3>
+                
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('equalPI', event)">等额本息</div>
+                    <div class="tab" onclick="switchTab('equalPP', event)">等额本金</div>
+                </div>
+
+                <!-- 等额本息 -->
+                <div id="tab-equalPI" class="tab-content active">
+                    <div class="result-item">
+                        <span>每月月供 (固定):</span>
+                        <span class="result-value large" id="piMonthlyPayment">0 元</span>
+                    </div>
+                    <div class="result-item">
+                        <span>累计利息总额:</span>
+                        <span class="result-value" id="piTotalInterest">0 元</span>
+                    </div>
+                    <div class="result-item">
+                        <span>还款总额 (本金+利息):</span>
+                        <span class="result-value" id="piTotalPayment">0 元</span>
+                    </div>
+                    <div class="note">特点：每月还款额相同，适合收入稳定的家庭。前几年还款中利息占比较大。</div>
+                </div>
+
+                <!-- 等额本金 -->
+                <div id="tab-equalPP" class="tab-content">
+                    <div class="result-item">
+                        <span>首月月供 (最高):</span>
+                        <span class="result-value large" id="ppFirstMonth">0 元</span>
+                    </div>
+                    <div class="result-item">
+                        <span>每月递减:</span>
+                        <span class="result-value" id="ppDecrease">0 元</span>
+                    </div>
+                    <div class="result-item">
+                        <span>累计利息总额:</span>
+                        <span class="result-value" id="ppTotalInterest">0 元</span>
+                    </div>
+                    <div class="result-item">
+                        <span>还款总额 (本金+利息):</span>
+                        <span class="result-value" id="ppTotalPayment">0 元</span>
+                    </div>
+                    <div class="note">特点：每月偿还同等数额的本金，利息随本金减少而递减。前期还款压力大，总利息较少。</div>
+                </div>
+            </div>
+            
+            <!-- 组合贷详情对比表格 -->
+            <div id="mixedLoanDetails" style="display: none;">
+                <h3>组合贷成分</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>类型</th>
+                            <th>金额(万)</th>
+                            <th>利率(%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>商业贷款</td>
+                            <td id="tableCommAmount">0</td>
+                            <td id="tableCommRate">0</td>
+                        </tr>
+                        <tr>
+                            <td>公积金贷款</td>
+                            <td id="tableProvAmount">0</td>
+                            <td id="tableProvRate">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const elTotalPrice = document.getElementById('totalPrice');
+        const elDownPayment = document.getElementById('downPayment');
+        const elDownPaymentRatioText = document.getElementById('downPaymentRatioText');
+        
+        const elArea = document.getElementById('area');
+        const elHomeType = document.getElementById('homeType');
+        const elLoanYears = document.getElementById('loanYears');
+        
+        const elCommercialLoan = document.getElementById('commercialLoan');
+        const elCommercialRate = document.getElementById('commercialRate');
+        const elProvidentLoan = document.getElementById('providentLoan');
+        const elProvidentRate = document.getElementById('providentRate');
+
+        // Auto calculate dependencies
+        function attachListeners() {
+            // Update down payment ratio
+            const updateRatio = () => {
+                const total = parseFloat(elTotalPrice.value) || 0;
+                const dp = parseFloat(elDownPayment.value) || 0;
+                if (total > 0) {
+                    const ratio = (dp / total) * 100;
+                    elDownPaymentRatioText.textContent = `比例: ${ratio.toFixed(2)}%`;
+                    if (ratio < 15) {
+                        elDownPaymentRatioText.style.color = 'var(--danger-color)';
+                        elDownPaymentRatioText.textContent += ' (低于新政最低15%)';
+                    } else {
+                        elDownPaymentRatioText.style.color = '#7f8c8d';
+                    }
+                }
+                
+                // Auto calculate max commercial loan based on down payment and provident
+                updateLoanAmounts();
+            };
+
+            const updateLoanAmounts = () => {
+                const total = parseFloat(elTotalPrice.value) || 0;
+                const dp = parseFloat(elDownPayment.value) || 0;
+                let prov = parseFloat(elProvidentLoan.value) || 0;
+                
+                // Ensure provident loan does not exceed available amount after down payment
+                const available = total - dp;
+                if (prov > available) {
+                    prov = available > 0 ? available : 0;
+                    elProvidentLoan.value = prov;
+                }
+                
+                let remaining = total - dp - prov;
+                if (remaining < 0) remaining = 0;
+                
+                elCommercialLoan.value = remaining.toFixed(2);
+            };
+
+            // Auto set provident loan limit and rates based on home type
+            const updateProvidentLimit = () => {
+                const homeType = elHomeType.value;
+                const total = parseFloat(elTotalPrice.value) || 0;
+                const dp = parseFloat(elDownPayment.value) || 0;
+                
+                // Shanghai 2026 policy: first home 200w+40w(supplementary)=240w, second home 160w+40w(supplementary)=200w
+                const maxProvident = homeType === 'first' ? 240 : 200;
+                
+                // Auto switch rates based on home type
+                // Provident fund: first 2.6%, second 3.075% (5+ years)
+                // Commercial: first 3.05%, second 3.06%
+                if (homeType === 'first') {
+                    elProvidentRate.value = '2.60';
+                    elCommercialRate.value = '3.05';
+                } else {
+                    elProvidentRate.value = '3.075';
+                    elCommercialRate.value = '3.06';
+                }
+                
+                // Don't exceed remaining amount after down payment
+                const remaining = total - dp;
+                const finalProvident = Math.min(maxProvident, remaining);
+                
+                elProvidentLoan.value = finalProvident > 0 ? finalProvident : 0;
+                updateLoanAmounts();
+            };
+
+            elTotalPrice.addEventListener('input', updateRatio);
+            elDownPayment.addEventListener('input', updateRatio);
+            elProvidentLoan.addEventListener('input', updateLoanAmounts);
+            elHomeType.addEventListener('change', updateProvidentLimit);
+            
+            // Initial call
+            updateRatio();
+            updateProvidentLimit();
+        }
+
+        function formatCurrency(num) {
+            return num.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Mortgage Math Function
+        function calcMortgage(principalW, ratePercent, years) {
+            if (principalW <= 0) return { piPayment: 0, piTotal: 0, piInterest: 0, ppFirst: 0, ppDecrease: 0, ppTotal: 0, ppInterest: 0 };
+            
+            let principal = principalW * 10000;
+            let months = years * 12;
+            let monthlyRate = ratePercent / 100 / 12;
+            
+            // PI (等额本息)
+            let piPayment = 0;
+            if (monthlyRate > 0) {
+                piPayment = (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+            } else {
+                piPayment = principal / months;
+            }
+            let piTotal = piPayment * months;
+            let piInterest = piTotal - principal;
+
+            // PP (等额本金)
+            let ppMonthlyPrincipal = principal / months;
+            let ppFirst = ppMonthlyPrincipal + (principal * monthlyRate);
+            let ppDecrease = ppMonthlyPrincipal * monthlyRate;
+            
+            let ppTotal = 0;
+            let ppInterest = 0;
+            for (let i = 0; i < months; i++) {
+                let interest = (principal - i * ppMonthlyPrincipal) * monthlyRate;
+                ppTotal += (ppMonthlyPrincipal + interest);
+                ppInterest += interest;
+            }
+
+            return {
+                piPayment, piTotal, piInterest,
+                ppFirst, ppDecrease, ppTotal, ppInterest
+            };
+        }
+
+        function calculate() {
+            // 1. Gather inputs
+            const total = parseFloat(elTotalPrice.value) || 0;
+            const dp = parseFloat(elDownPayment.value) || 0;
+            const area = parseFloat(elArea.value) || 0;
+            const homeType = elHomeType.value; // 'first' or 'second'
+            
+            const years = parseInt(elLoanYears.value) || 30;
+            const commL = parseFloat(elCommercialLoan.value) || 0;
+            const commR = parseFloat(elCommercialRate.value) || 0;
+            const provL = parseFloat(elProvidentLoan.value) || 0;
+            const provR = parseFloat(elProvidentRate.value) || 0;
+
+            // 2. Deed Tax Calculation (2026 Shanghai rules)
+            let deedTaxRate = 0;
+            let ruleText = "";
+            if (area <= 140) {
+                deedTaxRate = 0.01;
+                ruleText = "面积≤140㎡，统一按1%征收";
+            } else {
+                if (homeType === 'first') {
+                    deedTaxRate = 0.015;
+                    ruleText = "首套房面积>140㎡，按1.5%征收";
+                } else {
+                    deedTaxRate = 0.02;
+                    ruleText = "二套房面积>140㎡，按2%征收";
+                }
+            }
+            
+            const deedTax = (total * 10000) * deedTaxRate;
+            const totalCashNeeded = (dp * 10000) + deedTax;
+
+            document.getElementById('resDeedTax').textContent = formatCurrency(deedTax) + " 元";
+            document.getElementById('deedTaxNote').textContent = `* ${ruleText}`;
+            document.getElementById('resCashNeeded').textContent = formatCurrency(totalCashNeeded) + " 元";
+            
+            // 3. Loan Calculation
+            const totalLoan = commL + provL;
+            document.getElementById('resTotalLoan').textContent = totalLoan.toFixed(2);
+
+            const commRes = calcMortgage(commL, commR, years);
+            const provRes = calcMortgage(provL, provR, years);
+
+            // Combine results
+            const totalPiPayment = commRes.piPayment + provRes.piPayment;
+            const totalPiInterest = commRes.piInterest + provRes.piInterest;
+            const totalPiTotal = commRes.piTotal + provRes.piTotal;
+
+            const totalPpFirst = commRes.ppFirst + provRes.ppFirst;
+            const totalPpDecrease = commRes.ppDecrease + provRes.ppDecrease;
+            const totalPpInterest = commRes.ppInterest + provRes.ppInterest;
+            const totalPpTotal = commRes.ppTotal + provRes.ppTotal;
+
+            // 4. Update UI (PI)
+            document.getElementById('piMonthlyPayment').textContent = formatCurrency(totalPiPayment) + " 元";
+            document.getElementById('piTotalInterest').textContent = formatCurrency(totalPiInterest) + " 元";
+            document.getElementById('piTotalPayment').textContent = formatCurrency(totalPiTotal) + " 元";
+
+            // 5. Update UI (PP)
+            document.getElementById('ppFirstMonth').textContent = formatCurrency(totalPpFirst) + " 元";
+            document.getElementById('ppDecrease').textContent = formatCurrency(totalPpDecrease) + " 元";
+            document.getElementById('ppTotalInterest').textContent = formatCurrency(totalPpInterest) + " 元";
+            document.getElementById('ppTotalPayment').textContent = formatCurrency(totalPpTotal) + " 元";
+
+            // Table details for mixed
+            if (provL > 0 && commL > 0) {
+                document.getElementById('mixedLoanDetails').style.display = 'block';
+                document.getElementById('tableCommAmount').textContent = commL;
+                document.getElementById('tableCommRate').textContent = commR + '%';
+                document.getElementById('tableProvAmount').textContent = provL;
+                document.getElementById('tableProvRate').textContent = provR + '%';
+            } else {
+                document.getElementById('mixedLoanDetails').style.display = 'none';
+            }
+        }
+
+        function switchTab(tabId, evt) {
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            
+            evt.target.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        // Initialize
+        window.onload = () => {
+            attachListeners();
+            calculate();
+        };
+    </script>
+</body>
+</html>
